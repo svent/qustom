@@ -1,0 +1,160 @@
+namespace =	"qutil"
+author = "Sven Taute"
+author_email = "sven.taute@gmail.com"
+
+
+### match ###
+
+[function.match]
+description = "Retrieve value using a regular expression (case sensitive)"
+source = '''
+	function match(haystack, pattern) {
+		re = new RegExp(pattern);
+		res = re.exec(haystack);
+		if (!res) return null;
+		return res.pop();
+	}
+'''
+
+[[function.match.tests]]
+call = 'match("abc 123 def", /\d+/)'
+expect = '123'
+
+[[function.match.tests]]
+call = 'match("abc 123 DEF", /d\wf/)'
+null = true
+
+[[function.match.tests]]
+call = 'match("abc 123 def", /\w+\s(\d+)\s+\w+/)'
+expect = '123'
+
+
+### imatch ###
+
+[function.imatch]
+description = "Retrieve value using a regular expression (case insensitive)"
+source = '''
+	function imatch(haystack, pattern) {
+		re = new RegExp(pattern, "i");
+		res = re.exec(haystack);
+		if (!res) return null;
+		return res.pop();
+	}
+'''
+
+[[function.imatch.tests]]
+call = 'imatch("abc 123 DEF", /\d+/)'
+expect = '123'
+
+[[function.imatch.tests]]
+call = 'imatch("abc 123 DEF", /d\wf/)'
+expect = 'DEF'
+
+[[function.imatch.tests]]
+call = 'imatch("abc 123 DEF", /\w+\s(\d+)\s+def/)'
+expect = '123'
+
+
+### datefmt ###
+
+[function.datefmt]
+description = "Date format (yyyy-MM-dd) timestamps"
+source = '''
+	function datefmt(timestamp) {
+		return (new Date(parseInt(timestamp))).toISOString().slice(0, 10);
+	}
+'''
+
+[[function.datefmt.tests]]
+call = 'datefmt("1596142479661")'
+expect = '2020-07-30'
+
+
+### datetimefmt ###
+
+[function.datetimefmt]
+description = "Datetime format (yyyy-MM-dd HH:mm:ss) timestamps"
+source = '''
+	function datetimefmt(timestamp) {
+		var t = (new Date(parseInt(timestamp))).toISOString()
+		return t.slice(0, 10) + " " + t.slice(11, 19);
+	}
+'''
+
+[[function.datetimefmt.tests]]
+call = 'datetimefmt("1596142479661")'
+expect = '2020-07-30 20:54:39'
+
+
+
+### map ###
+
+[function.map]
+description = "Map value using a JavaScript expression with lodash support"
+includes = ["lodash"]
+source = '''
+	function map(value, expression) {
+		return function (e) { return eval(expression) }(value);
+	}
+'''
+
+[[function.map.tests]]
+call = ''' map("www.google.de", '_.startsWith(e, "https://") ? e : "https://" + e') '''
+expect = 'https://www.google.de'
+
+
+### intenumjoin ###
+
+[function.intenumjoin]
+description = "Join an enumeration of integers using separator"
+parameter_types = "String [ENUMBER"
+source = '''
+	function intenumjoin(separator, items) {
+		if (!items.hasMoreElements()) return "";
+		var result = items.nextElement();
+		while(items.hasMoreElements()) {
+			result += separator + items.nextElement();
+		}
+		return result;
+	}
+'''
+
+[[function.intenumjoin.tests]]
+call = ''' 
+// needed to emulate the behavior of java.util.Enumeration for JavaScript arrays
+Array.prototype.hasMoreElements= function(){return this.length > 0};
+Array.prototype.nextElement = Array.prototype.shift;
+
+var items = [1,2,3];
+intenumjoin("|", items);
+'''
+expect = '1|2|3'
+
+
+### stringenumjoin ###
+
+[function.stringenumjoin]
+description = "Join an enumeration of strings using separator"
+parameter_types = "String [EString"
+source = '''
+	function stringenumjoin(separator, items) {
+		if (!items.hasMoreElements()) return "";
+		var result = items.nextElement();
+		while(items.hasMoreElements()) {
+			result += separator + items.nextElement();
+		}
+		return result;
+	}
+'''
+
+[[function.stringenumjoin.tests]]
+call = ''' 
+// needed to emulate the behavior of java.util.Enumeration for JavaScript arrays
+Array.prototype.hasMoreElements= function(){return this.length > 0};
+Array.prototype.nextElement = Array.prototype.shift;
+
+var items = ["hello","world"];
+stringenumjoin("|", items);
+'''
+expect = 'hello|world'
+
